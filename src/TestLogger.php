@@ -1,9 +1,9 @@
 <?php
 /*
- * This file is part of drupalindus
+ * This file is part of dgfip-si1/test-logger
  */
 
-namespace jmg\testLogger;
+namespace DgfipSI1\testLogger;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
@@ -15,21 +15,23 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Test logger
+ * @phpstan-type record array{level: string, message: string, context: array<string,string>}
  */
 class TestLogger extends AbstractLogger implements LoggerInterface
 {
-    /** @var array<string,array<array<string,string>>>  */
+    /** @var array<string,array<record>>  */
     public $recordsByLevel = [];
 
     /**
      * @inheritdoc
      *
-     * @param array<mixed> $context
+     * @param string               $level
+     * @param array<string,string> $context
      */
     public function log($level, $message, array $context = [])
     {
         $record = [
-            'level' => $level,
+            'level'    => $level,
             'message' => $message,
             'context' => $context,
         ];
@@ -53,8 +55,10 @@ class TestLogger extends AbstractLogger implements LoggerInterface
             $level = strtolower($matches[2]);
             if (method_exists($this, $genericMethod)) {
                 $args[] = $level;
-
-                return call_user_func_array([$this, $genericMethod], $args);
+                $callback = [$this, $genericMethod];
+                if (is_callable($callback)) {
+                    return call_user_func_array($callback, $args);
+                }
             }
         }
         throw new \BadMethodCallException(sprintf("Call to undefined method '%s::%s()'", get_class($this), $method));
@@ -114,6 +118,9 @@ class TestLogger extends AbstractLogger implements LoggerInterface
      */
     public function messageList($level)
     {
+        if (!array_key_exists($level, $this->recordsByLevel)) {
+            return [];
+        }
         $getMsg = function ($record) {
             return $record['message'];
         };
@@ -123,7 +130,7 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     /**
      * getRecordsByLevel : getter for $recordsByLevel
      *
-     * @return array<string,array<array<string,string>>>
+     * @return array<string,array<record>>
      */
     public function getRecordsByLevel()
     {

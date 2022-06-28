@@ -2,7 +2,7 @@
 /*
  * This file is part of drupalindus
  */
-namespace jmg\testLogger;
+namespace DgfipSI1\testLogger;
 
 use PHPUnit\Framework\TestCase;
 
@@ -35,8 +35,10 @@ class LogTestCase extends TestCase
             $level = lcfirst($matches[2]);
             if (method_exists($this, $genericMethod)) {
                 $args[] = $level;
-
-                return call_user_func_array([$this, $genericMethod], $args);
+                $callback = [$this, $genericMethod];
+                if (is_callable($callback)) {
+                    return call_user_func_array($callback, $args);
+                }
             }
         }
         throw new \BadMethodCallException(sprintf("Call to undefined method '%s::%s()'", get_class($this), $method));

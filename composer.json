@@ -1,12 +1,11 @@
 {
-	"name" : "jmg/test-logger",
+	"name" : "dgfip-si1/test-logger",
 	"description" : "Test psr/logs in phpunit.",
 	"type" : "library",
 	"license" : "GPL-3.0-or-later",
 	"authors": [
 		{
-			"name" : "Jean-Marie Gervais",
-			"email" : "jm.gervais@gmail.com"
+			"name" : "Jean-Marie Gervais"
 		}
 	],
 	"keywords" : [ "tests", "testing", "log", "logger" ],
@@ -25,7 +24,17 @@
 	"prefer-stable" : true,
 	"autoload": {
 		"psr-4": {
-			"jmg\\testLogger\\": "src/"
+			"DgfipSI1\\testLogger\\": "src/"
 		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"DgfipSI1\\testLoggerTests\\": "tests/phpunit/src"
+		}
+	},
+	"scripts": {
+		"test":    "vendor/bin/phpunit",
+		"phpstan": "vendor/bin/phpstan",
+		"phpcs":   "vendor/bin/phpcs"
 	}
 }
