@@ -102,7 +102,7 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     public function searchRecords($message, $level)
     {
         if (isset($this->recordsByLevel[$level])) {
-            foreach ($this->recordsByLevel[$level] as $i => $rec) {
+            foreach ($this->recordsByLevel[$level] as $rec) {
                 if (strpos($rec['message'], $message) !== false) {
                     return true;
                 }
