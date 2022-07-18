@@ -7,11 +7,14 @@ namespace DgfipSI1\testLogger;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @method bool assertNoticeInLog(string $message)
+ * @method bool assertEmergencyInLog(string $message)
+ * @method bool assertAlertInLog(string $message)
+ * @method bool assertCriticalInLog(string $message)
  * @method bool assertErrorInLog(string $message)
+ * @method bool assertWarningInLog(string $message)
+ * @method bool assertNoticeInLog(string $message)
  * @method bool assertInfoInLog($message)
  * @method bool assertDebugInLog($message)
- * @method bool assertNoticeInLog($message)
  */
 class LogTestCase extends TestCase
 {
