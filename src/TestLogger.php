@@ -25,10 +25,13 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     /**
      * @inheritdoc
      *
-     * @param string               $level
+     * @param string                $level
+     * @param string|\Stringable   $message
      * @param array<string,string> $context
+     *
+     * @return void
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         $record = [
             'level'    => $level,
@@ -125,7 +128,7 @@ class TestLogger extends AbstractLogger implements LoggerInterface
             return $record['message'];
         };
 
-        return array_map($getMsg, $this->recordsByLevel[$level]);
+            return array_map($getMsg, $this->recordsByLevel[$level]);
     }
     /**
      * getRecordsByLevel : getter for $recordsByLevel
