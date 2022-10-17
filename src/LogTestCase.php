@@ -15,6 +15,15 @@ use PHPUnit\Framework\TestCase;
  * @method bool assertNoticeInLog(string $message)
  * @method bool assertInfoInLog($message)
  * @method bool assertDebugInLog($message)
+ *
+ * @method bool assertEmergencyLogEmpty()
+ * @method bool assertAlertLogEmpty()
+ * @method bool assertCriticalLogEmpty()
+ * @method bool assertErrorLogEmpty()
+ * @method bool assertWarningLogEmpty()
+ * @method bool assertNoticeLogEmptyg()
+ * @method bool assertInfoLogEmpty()
+ * @method bool assertDebugLogEmpty()
  */
 class LogTestCase extends TestCase
 {
@@ -124,6 +133,29 @@ class LogTestCase extends TestCase
             }
         }
         print "$printed message(s) in logs (excluding debug)\n";
+        print "=============================================\n";
+    }
+    /**
+     *
+     * @param bool $cut
+     */
+    public function showDebugLogs(bool $cut = false): void
+    {
+        $recordsByLevel = $this->logger->getRecordsByLevel();
+        $printed = 0;
+        $fmt = $cut ? "    %-76.76s\n" : "    %s\n";
+        print "\n=============================================\n";
+        foreach (array_keys($recordsByLevel) as $level) {
+            if ('debug' !== $level) {
+                continue;
+            }
+            print "LEVEL $level\n";
+            foreach ($recordsByLevel[$level] as $record) {
+                printf($fmt, $record['message']);
+                $printed++;
+            }
+        }
+        print "$printed message(s) in debug logs\n";
         print "=============================================\n";
     }
 }
