@@ -28,6 +28,20 @@ class TestLoggerTest extends TestCase
         $this->assertTrue($logger->searchAndDeleteAlertRecords('foo'));
         $this->assertFalse($logger->searchAndDeleteAlertRecords('foo'));
     }
+    public function testCallerFilter(): void
+    {
+        $logger = new TestLogger(['testCallerFilter']);
+        $logger->alert('foo');
+        $this->assertFalse($logger->searchAndDeleteInfoRecords('foo'));
+        $this->assertTrue($logger->searchAndDeleteAlertRecords('foo'));
+        $this->assertFalse($logger->searchAndDeleteAlertRecords('foo'));
+
+        $logger = new TestLogger(['otherMethod']);
+        $logger->alert('foo');
+        $this->assertFalse($logger->searchAndDeleteInfoRecords('foo'));
+        $this->assertFalse($logger->searchAndDeleteAlertRecords('foo'));
+
+    }
     public function testsearch(): void
     {
         $logger = new TestLogger;

@@ -22,6 +22,20 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     /** @var array<string,array<record>>  */
     public $recordsByLevel = [];
 
+    /** @var array<string>  $callers */
+    public $callers;
+
+    /**
+     * Constructor
+     *
+     * @param array<string> $callers
+     *
+     * @return void
+     */
+    public function __construct($callers = [])
+    {
+        $this->callers = $callers;
+    }
     /**
      * @inheritdoc
      *
@@ -33,12 +47,20 @@ class TestLogger extends AbstractLogger implements LoggerInterface
      */
     public function log($level, string|\Stringable $message, array $context = []): void
     {
+        // log only from defined caller methods
+        if (0 !== count($this->callers)) {
+            // trace[0] : log,  trace[1] : debug|warning|..., real caller is in trace[2]
+            $trace = debug_backtrace();
+            $caller = $trace[2];
+            if (! in_array($caller['function'], $this->callers)) {
+                return;
+            }
+        }
         $record = [
             'level'    => $level,
             'message' => $message,
             'context' => $context,
         ];
-
         $this->recordsByLevel[$level][] = $record;
     }
 
