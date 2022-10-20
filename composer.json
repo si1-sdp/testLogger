@@ -10,8 +10,7 @@
 	],
 	"keywords" : [ "tests", "testing", "log", "logger" ],
 	"require" : {
-		"php" : ">=7.4",
-		"composer/composer" : "~2.1",
+		"php" : ">=8.0",
 		"psr/log" : " ^2.0 || ^3.0",
 		"phpunit/phpunit" : "^9.5"
 	},	

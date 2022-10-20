@@ -41,6 +41,17 @@ class TestLoggerTest extends TestCase
         $this->assertFalse($logger->searchAndDeleteInfoRecords('foo'));
         $this->assertFalse($logger->searchAndDeleteAlertRecords('foo'));
 
+        // test log from closure
+        $logger = new TestLogger(['testCallerFilter']);
+
+        $logger->alert('foo');
+        $alertClosure = function($message) use ($logger) {
+            $logger->alert($message);
+        };
+        $alertClosure("message1");
+        $alertClosure("message2");
+        $this->assertTrue($logger->searchAndDeleteAlertRecords('message1'));
+        $this->assertTrue($logger->searchAndDeleteAlertRecords('message2'));
     }
     public function testsearch(): void
     {
