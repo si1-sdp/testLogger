@@ -48,11 +48,22 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     public function log($level, string|\Stringable $message, array $context = []): void
     {
         // log only from defined caller methods
+        // find first nonClosure method
         if (0 !== count($this->callers)) {
-            // trace[0] : log,  trace[1] : debug|warning|..., real caller is in trace[2]
+            // trace[0] : log, trace[1] : debug|warning|..., real caller is in trace[2] or more if called from closure
             $trace = debug_backtrace();
-            $caller = $trace[2];
-            if (! in_array($caller['function'], $this->callers)) {
+            $found = false;
+            for ($lvl = 2; $lvl < count($trace); $lvl++) {
+                $closure = (false !== strpos($trace[$lvl]['function'], '{closure}'));
+                if ($closure || !array_key_exists('class', $trace[$lvl])) {
+                    continue;
+                }
+                if (in_array($trace[$lvl]['function'], $this->callers)) {
+                    $found = true;
+                }
+                break;
+            }
+            if (!$found) {
                 return;
             }
         }
