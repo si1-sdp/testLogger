@@ -3,3 +3,4 @@ parameters:
   tmpDir: tests/tmp
   paths:
     - src
+    - tests/phpunit/src
