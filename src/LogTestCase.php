@@ -7,14 +7,14 @@ namespace DgfipSI1\testLogger;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @method bool assertEmergencyInLog(string $message)
- * @method bool assertAlertInLog(string $message)
- * @method bool assertCriticalInLog(string $message)
- * @method bool assertErrorInLog(string $message)
- * @method bool assertWarningInLog(string $message)
- * @method bool assertNoticeInLog(string $message)
- * @method bool assertInfoInLog($message)
- * @method bool assertDebugInLog($message)
+ * @method bool assertEmergencyInLog(string $message, bool $interpolate = false)
+ * @method bool assertAlertInLog(string $message, bool $interpolate = false)
+ * @method bool assertCriticalInLog(string $message, bool $interpolate = false)
+ * @method bool assertErrorInLog(string $message, bool $interpolate = false)
+ * @method bool assertWarningInLog(string $message, bool $interpolate = false)
+ * @method bool assertNoticeInLog(string $message, bool $interpolate = false)
+ * @method bool assertInfoInLog($message, bool $interpolate = false)
+ * @method bool assertDebugInLog($message, bool $interpolate = false)
  *
  * @method bool assertEmergencyLogEmpty()
  * @method bool assertAlertLogEmpty()
@@ -46,7 +46,7 @@ class LogTestCase extends TestCase
             $genericMethod = $matches[1].$matches[3];
             $level = lcfirst($matches[2]);
             if (method_exists($this, $genericMethod)) {
-                $args[] = $level;
+                $args = array_merge([$level], $args);
                 $callback = [$this, $genericMethod];
                 if (is_callable($callback)) {
                     return call_user_func_array($callback, $args);
@@ -58,13 +58,14 @@ class LogTestCase extends TestCase
     /**
      * Assert message is in log level $level, then purge message
      *
-     * @param string $message
      * @param string $level
+     * @param string $message
+     * @param bool   $interpolate
      */
-    public function assertInLog($message, $level): void
+    public function assertInLog($level, $message, $interpolate = false): void
     {
         $failMsg = "message [$level]$message not found in log";
-        $this->assertTrue($this->logger->searchAndDeleteRecords($message, $level), $failMsg);
+        $this->assertTrue($this->logger->searchAndDeleteRecords($message, $level, $interpolate), $failMsg);
     }
     /**
      * assertLogEmpty function : assert that no more messages of level $level are left in log
@@ -91,16 +92,16 @@ class LogTestCase extends TestCase
     {
         $recordsByLevel = $this->logger->getRecordsByLevel();
         $msg = '';
+        $count = 0;
         foreach ($recordsByLevel as $level => $records) {
             if ('debug' === $level) {
                 continue;
             }
-            if (count($records) > 0) {
-                $msg .= count($records)." message(s) left in level $level\n - ";
-                $msg .= implode("\n - ", $this->logger->messageList($level))."\n";
-            }
+            $msg .= count($records)." message(s) left in level $level\n - ";
+            $msg .= implode("\n - ", $this->logger->messageList($level))."\n";
+            $count += count($records);
         }
-        $this->assertEmpty($msg, "Fail asserting that log is empty :\n$msg");
+        $this->assertEquals(0, $count, "Fail asserting that log is empty :\n$msg");
     }
 
     /**
@@ -129,6 +130,7 @@ class LogTestCase extends TestCase
             print "LEVEL $level\n";
             foreach ($recordsByLevel[$level] as $record) {
                 printf($fmt, $record['message']);
+                printf($fmt, "  => ".$this->logger->interpolate($record['message'], $record['context']));
                 $printed++;
             }
         }

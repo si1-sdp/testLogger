@@ -34,6 +34,17 @@ class TestLogger extends AbstractLogger implements LoggerInterface
      */
     public function __construct($callers = [])
     {
+        $this->setCallers($callers);
+    }
+    /**
+     * set authorized caller methods
+     *
+     * @param array<string> $callers
+     *
+     * @return void
+     */
+    public function setCallers($callers)
+    {
         $this->callers = $callers;
     }
     /**
@@ -76,44 +87,26 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     }
 
     /**
-     * function fooInfoBar     => FooRecordBar(info)   => Ecrire getAndDelete
-     * function fooInfoRecords => FooRecords(info)
-     *
-     * @param string       $method
-     * @param array<mixed> $args
-     *
-     * @return mixed
-     */
-    public function __call($method, $args)
-    {
-        if (preg_match('/(.*)(Debug|Info|Notice|Warning|Error|Critical|Alert|Emergency)(.*)/', $method, $matches) > 0) {
-            $genericMethod = $matches[1].('Records' !== $matches[3] ? 'Record' : '').$matches[3];
-            $level = strtolower($matches[2]);
-            if (method_exists($this, $genericMethod)) {
-                $args[] = $level;
-                $callback = [$this, $genericMethod];
-                if (is_callable($callback)) {
-                    return call_user_func_array($callback, $args);
-                }
-            }
-        }
-        throw new \BadMethodCallException(sprintf("Call to undefined method '%s::%s()'", get_class($this), $method));
-    }
-    /**
      * searchAndDeleteInfoRecords, searchAndDeleteWarningRecords, ...
      *
      * @param string $message
      * @param string $level
+     * @param bool   $interpolate
      *
      * @return bool
      */
-    public function searchAndDeleteRecords($message, $level)
+    public function searchAndDeleteRecords($message, $level, $interpolate = false)
     {
         $toDelete = [];
         $ret = false;
+
         if (isset($this->recordsByLevel[$level])) {
             foreach ($this->recordsByLevel[$level] as $i => $rec) {
-                if (strpos($rec['message'], $message) !== false) {
+                $recMessage = $rec['message'];
+                if ($interpolate) {
+                    $recMessage = $this->interpolate($rec['message'], $rec['context']);
+                }
+                if (strpos($recMessage, $message) !== false) {
                     $ret = true;
                     $toDelete[] = $i;
                 }
@@ -158,10 +151,10 @@ class TestLogger extends AbstractLogger implements LoggerInterface
             return [];
         }
         $getMsg = function ($record) {
-            return $record['message'];
+            return $record['message']."\n    => ".$this->interpolate($record['message'], $record['context']);
         };
 
-            return array_map($getMsg, $this->recordsByLevel[$level]);
+        return array_map($getMsg, $this->recordsByLevel[$level]);
     }
     /**
      * getRecordsByLevel : getter for $recordsByLevel
@@ -180,5 +173,27 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     public function reset()
     {
         $this->recordsByLevel = [];
+    }
+    /**
+     * Interpolates context values into the message placeholders.
+     *
+     * @author PHP Framework Interoperability Group
+     *
+     * @param string              $message
+     * @param array<string,mixed> $context
+     *
+     * @return string
+     */
+    public function interpolate($message, $context)
+    {
+        // build a replacement array with braces around the context keys
+        $replace = array();
+        foreach ($context as $key => $val) {
+            if (!is_array($val) && (!is_object($val) || method_exists($val, '__toString'))) {
+                $replace[sprintf('{%s}', $key)] = $val;
+            }
+        }
+        // interpolate replacement values into the message and return
+        return strtr($message, $replace);
     }
 }
