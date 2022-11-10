@@ -25,8 +25,10 @@ use PHPUnit\Framework\TestCase;
  * @method bool assertInfoLogEmpty()
  * @method bool assertDebugLogEmpty()
  */
-class LogTestCase extends TestCase
+// @codingStandardsIgnoreStart
+abstract class LogTestCase extends TestCase
 {
+    // @codingStandardsIgnoreEnd
     /** @var TestLogger $logger */
     protected $logger;
 

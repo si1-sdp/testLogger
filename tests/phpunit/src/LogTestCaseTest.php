@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace DgfipSI1\testLoggerTest;
+namespace DgfipSI1\testLoggerTests;
 
 use DgfipSI1\testLogger\LogTestCase;
 use DgfipSI1\testLogger\TestLogger;
@@ -20,7 +20,7 @@ use ReflectionClass;
  */
 class LogTestCaseTest extends TestCase
 {
-    /** @var LogTestCase */
+    /** @var LogTestCaseConcrete $test */
     protected $test;
 
     /** @var TestLogger */
@@ -33,7 +33,7 @@ class LogTestCaseTest extends TestCase
      */
     public function setup(): void
     {
-        $this->test = new LogTestCase();
+        $this->test = new LogTestCaseConcrete();
         $class = new ReflectionClass(LogTestCase::class);
 
         $lg = $class->getProperty('logger');

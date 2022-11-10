@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace DgfipSI1\testLoggerTest;
+namespace DgfipSI1\testLoggerTests;
 
 use DgfipSI1\testLogger\TestLogger;
 use PHPUnit\Framework\TestCase;
