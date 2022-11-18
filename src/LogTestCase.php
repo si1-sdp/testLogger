@@ -72,17 +72,23 @@ abstract class LogTestCase extends TestCase
     /**
      * assertLogEmpty function : assert that no more messages of level $level are left in log
      *
-     * @param string $level
+     * @param string|null $level
      *
      * @return void
      */
-    public function assertLogEmpty($level): void
+    public function assertLogEmpty($level = null): void
     {
         $recordsByLevel = $this->logger->getRecordsByLevel();
-        if (array_key_exists($level, $recordsByLevel)) {
-            $messages = count($recordsByLevel[$level]);
-            $explain = ucfirst($level)." messages left : $messages\n".print_r($recordsByLevel[$level], true);
-            $this->assertEquals(0, $messages, $explain);
+        if (null === $level) {
+            foreach ($recordsByLevel as $messages) {
+                $this->assertEquals(0, count($messages));
+            }
+        } else {
+            if (array_key_exists($level, $recordsByLevel)) {
+                $messages = count($recordsByLevel[$level]);
+                $explain = ucfirst($level)." messages left : $messages\n".print_r($recordsByLevel[$level], true);
+                $this->assertEquals(0, $messages, $explain);
+            }
         }
     }
     /**
@@ -114,6 +120,15 @@ abstract class LogTestCase extends TestCase
     public function logReset(): void
     {
         $this->logger->reset();
+    }
+    /**
+     *
+     * @param bool $cut
+     */
+    public function showLogs(bool $cut = false): void
+    {
+        $this->showNoDebugLogs($cut);
+        $this->showDebugLogs($cut);
     }
     /**
      *
@@ -156,6 +171,7 @@ abstract class LogTestCase extends TestCase
             print "LEVEL $level\n";
             foreach ($recordsByLevel[$level] as $record) {
                 printf($fmt, $record['message']);
+                printf($fmt, "  => ".$this->logger->interpolate($record['message'], $record['context']));
                 $printed++;
             }
         }

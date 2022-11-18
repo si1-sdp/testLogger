@@ -16,7 +16,8 @@ use ReflectionClass;
 /**
  * logTestCase tests
  *
- * @uses \DgfipSI1\testLogger\TestLogger
+ * @uses DgfipSI1\testLogger\LogTestCase
+ * @uses DgfipSI1\testLogger\TestLogger
  */
 class LogTestCaseTest extends TestCase
 {
@@ -73,24 +74,18 @@ class LogTestCaseTest extends TestCase
      *
      * @covers \DgfipSI1\testLogger\LogTestCase::assertLogEmpty
      *
-     * @uses \DgfipSI1\testLogger\LogTestCase::__call
-     * @uses \DgfipSI1\testLogger\LogTestCase::assertInLog
-     *
      */
     public function testAssertLogEmpty(): void
     {
         $this->logger->alert('test message with {name}', [ 'name' => 'foo']);
         $this->test->assertAlertInLog('test message with {name}');
         $this->test->assertAlertLogEmpty();
+        $this->test->assertLogEmpty();
     }
    /**
      * Test assertNoMoreProdMessages method
      *
      * @covers \DgfipSI1\testLogger\LogTestCase::assertNoMoreProdMessages
-     *
-     * @uses \DgfipSI1\testLogger\LogTestCase::__call
-     * @uses \DgfipSI1\testLogger\LogTestCase::assertInLog
-     * @uses \DgfipSI1\testLogger\LogTestCase::assertLogEmpty
      *
      */
     public function testAssertNoMoreProdMessages(): void
@@ -122,7 +117,7 @@ class LogTestCaseTest extends TestCase
      */
     public function testShowNoDebugLogs(): void
     {
-        $this->expectOutputRegex('/1 message.s. in logs .excluding debug./');
+        $this->expectOutputString($this->getAlertText());
         $this->logger->alert('test message with {name}', [ 'name' => 'foo']);
         $this->logger->debug('debug message...');
         $this->test->showNoDebugLogs();
@@ -135,9 +130,54 @@ class LogTestCaseTest extends TestCase
      */
     public function testShowDebugLogs(): void
     {
-        $this->expectOutputRegex('/1 message.s. in debug logs/');
+        $this->expectOutputString($this->getDebugText());
         $this->logger->alert('test message with {name}', [ 'name' => 'foo']);
         $this->logger->debug('debug message...');
         $this->test->showDebugLogs();
+    }
+    /**
+     * Test showLogs method
+     *
+     * @covers \DgfipSI1\testLogger\LogTestCase::showLogs
+     *
+     */
+    public function testShowLogs(): void
+    {
+        $this->expectOutputString($this->getAlertText().$this->getDebugText());
+        $this->logger->alert('test message with {name}', [ 'name' => 'foo']);
+        $this->logger->debug('debug message...');
+        $this->test->showLogs();
+    }
+    /**
+     * getDebug
+     *
+     * @return string
+     */
+    protected function getDebugText()
+    {
+        $debugLog  = "\n=============================================\n";
+        $debugLog .= "LEVEL debug\n";
+        $debugLog .= "    debug message...\n";
+        $debugLog .= "      => debug message...\n";
+        $debugLog .= "1 message(s) in debug logs\n";
+        $debugLog .= "=============================================\n";
+
+        return $debugLog;
+    }
+    /**
+     * get Alert
+     *
+     * @return string
+     */
+    protected function getAlertText()
+    {
+        $alertLog  = "\n=============================================\n";
+        $alertLog .= "LEVEL alert\n";
+        $alertLog .= "    test message with {name}\n";
+        $alertLog .= "      => test message with foo\n";
+        $alertLog .= "1 message(s) in logs (excluding debug)\n";
+        $alertLog .= "=============================================\n";
+
+        return $alertLog;
     }
 }
