@@ -32,7 +32,7 @@ class LogTestCaseTest extends TestCase
      *
      * @return void
      */
-    public function setup(): void
+    public function setUp(): void
     {
         $this->test = new LogTestCaseConcrete();
         $class = new ReflectionClass(LogTestCase::class);
@@ -60,14 +60,38 @@ class LogTestCaseTest extends TestCase
      *
      * @covers \DgfipSI1\testLogger\LogTestCase::__call
      * @covers \DgfipSI1\testLogger\LogTestCase::assertInLog
+     * @covers \DgfipSI1\testLogger\LogTestCase::assertNotInLog
      *
      */
     public function testAssertInLog(): void
     {
         $this->logger->alert('test message with {name}', [ 'name' => 'foo']);
         $this->logger->info('test message with {name}', [ 'name' => 'bar']);
-        $this->test->assertAlertInLog('test message with {name}');
-        $this->test->assertInfoInLog('test message with bar', true);
+        $this->test->assertAlertNotInLog('test message with {name}', true); // interpolated
+        $this->test->assertAlertNotInLog('message with', false, true);      // exact match
+        $this->test->assertAlertInLog('test message with');                 // aproximate
+        $this->test->assertAlertLogEmpty();
+        $this->test->assertInfoNotInLog('test message with bar', false);    // not interpolated
+        $this->test->assertInfoNotInLog('message with bar', true, true);    // exact search
+        $this->test->assertInfoInLog('test message with bar', true, true);  // interpolated & exact
+        $this->test->assertInfoLogEmpty();
+    }
+    /**
+     * Test __call method and assertInContextLog
+     *
+     * @covers \DgfipSI1\testLogger\LogTestCase::__call
+     * @covers \DgfipSI1\testLogger\LogTestCase::assertInContextLog
+     * @covers \DgfipSI1\testLogger\LogTestCase::assertNotInContextLog
+     *
+     */
+    public function testAssertInContextLog(): void
+    {
+        $this->logger->alert('test alert message', [ 'name' => 'foo']);
+        $this->logger->info('test info message', [ 'name' => 'bar']);
+        $this->test->assertAlertNotInContextLog('test alert message', [ 'name' => '__']);
+        $this->test->assertAlertInContextLog('test alert message', [ 'name' => 'foo']);
+        $this->test->assertInfoNotInContextLog('test alert message', [ 'name' => '__']);
+        $this->test->assertInfoInContextLog('test info message', [ 'name' => 'bar']);
     }
    /**
      * Test assertLogEmpty method
@@ -157,7 +181,7 @@ class LogTestCaseTest extends TestCase
     {
         $debugLog  = "\n=============================================\n";
         $debugLog .= "LEVEL debug\n";
-        $debugLog .= "    debug message...\n";
+        $debugLog .= "    debug message... - Context: \n";
         $debugLog .= "      => debug message...\n";
         $debugLog .= "1 message(s) in debug logs\n";
         $debugLog .= "=============================================\n";
@@ -173,7 +197,7 @@ class LogTestCaseTest extends TestCase
     {
         $alertLog  = "\n=============================================\n";
         $alertLog .= "LEVEL alert\n";
-        $alertLog .= "    test message with {name}\n";
+        $alertLog .= "    test message with {name} - Context: name=foo\n";
         $alertLog .= "      => test message with foo\n";
         $alertLog .= "1 message(s) in logs (excluding debug)\n";
         $alertLog .= "=============================================\n";

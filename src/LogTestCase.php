@@ -7,14 +7,41 @@ namespace DgfipSI1\testLogger;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @method bool assertEmergencyInLog(string $message, bool $interpolate = false)
- * @method bool assertAlertInLog(string $message, bool $interpolate = false)
- * @method bool assertCriticalInLog(string $message, bool $interpolate = false)
- * @method bool assertErrorInLog(string $message, bool $interpolate = false)
- * @method bool assertWarningInLog(string $message, bool $interpolate = false)
- * @method bool assertNoticeInLog(string $message, bool $interpolate = false)
- * @method bool assertInfoInLog($message, bool $interpolate = false)
- * @method bool assertDebugInLog($message, bool $interpolate = false)
+ * @method bool assertEmergencyInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertAlertInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertCriticalInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertErrorInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertWarningInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertNoticeInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertInfoInLog($message, bool $interpolate = false, $exact=false)
+ * @method bool assertDebugInLog($message, bool $interpolate = false, $exact=false)
+ *
+ * @method bool assertEmergencyNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertAlertNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertCriticalNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertErrorNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertWarningNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertNoticeNotInLog(string $message, bool $interpolate = false, $exact=false)
+ * @method bool assertInfoNotInLog($message, bool $interpolate = false, $exact=false)
+ * @method bool assertDebugNotInLog($message, bool $interpolate = false, $exact=false)
+ *
+ * @method bool assertEmergencyInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertAlertInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertCriticalInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertErrorInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertWarningInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertNoticeInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertInfoInContextLog($message, array $withCtxt, $exact=false)
+ * @method bool assertDebugInContextLog($message, array $withCtxt, $exact=false)
+ *
+ * @method bool assertEmergencyNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertAlertNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertCriticalNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertErrorNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertWarningNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertNoticeNotInContextLog(string $message, array $withCtxt, $exact=false)
+ * @method bool assertInfoNotInContextLog($message, array $withCtxt, $exact=false)
+ * @method bool assertDebugNotInContextLog($message, array $withCtxt, $exact=false)
  *
  * @method bool assertEmergencyLogEmpty()
  * @method bool assertAlertLogEmpty()
@@ -60,14 +87,56 @@ abstract class LogTestCase extends TestCase
     /**
      * Assert message is in log level $level, then purge message
      *
+     * @param string               $level
+     * @param string               $message
+     * @param array<string,string> $withCtxt
+     * @param bool                 $exact
+     */
+    public function assertInContextLog($level, $message, $withCtxt, $exact = false): void
+    {
+        $failMsg = "message [$level]$message not found in log - filter by context ".print_r($withCtxt, true)."\n";
+        $ret = $this->logger->searchAndDeleteRecords($message, $level, false, $exact, $withCtxt);
+        self::assertTrue($ret, $failMsg);
+    }
+    /**
+     * Assert message is NOT in log level $level, then purge message
+     *
+     * @param string               $level
+     * @param string               $message
+     * @param array<string,string> $withCtxt
+     * @param bool                 $exact
+     */
+    public function assertNotInContextLog($level, $message, $withCtxt, $exact = false): void
+    {
+        $failMsg = "message [$level]$message not found in log - filter by context ".print_r($withCtxt, true)."\n";
+        $ret = $this->logger->searchAndDeleteRecords($message, $level, false, $exact, $withCtxt);
+        self::assertFalse($ret, $failMsg);
+    }
+    /**
+     * Assert message is in log level $level, then purge message
+     *
      * @param string $level
      * @param string $message
      * @param bool   $interpolate
+     * @param bool   $exact
      */
-    public function assertInLog($level, $message, $interpolate = false): void
+    public function assertInLog($level, $message, $interpolate = false, $exact = false): void
     {
         $failMsg = "message [$level]$message not found in log";
-        $this->assertTrue($this->logger->searchAndDeleteRecords($message, $level, $interpolate), $failMsg);
+        self::assertTrue($this->logger->searchAndDeleteRecords($message, $level, $interpolate, $exact), $failMsg);
+    }
+    /**
+     * Assert message is NOT in log level $level, then purge message
+     *
+     * @param string $level
+     * @param string $message
+     * @param bool   $interpolate
+     * @param bool   $exact
+     */
+    public function assertNotInLog($level, $message, $interpolate = false, $exact = false): void
+    {
+        $failMsg = "message [$level]$message not found in log";
+        self::assertFalse($this->logger->searchAndDeleteRecords($message, $level, $interpolate, $exact), $failMsg);
     }
     /**
      * assertLogEmpty function : assert that no more messages of level $level are left in log
@@ -81,13 +150,13 @@ abstract class LogTestCase extends TestCase
         $recordsByLevel = $this->logger->getRecordsByLevel();
         if (null === $level) {
             foreach ($recordsByLevel as $messages) {
-                $this->assertEquals(0, count($messages));
+                self::assertEquals(0, count($messages));
             }
         } else {
             if (array_key_exists($level, $recordsByLevel)) {
                 $messages = count($recordsByLevel[$level]);
                 $explain = ucfirst($level)." messages left : $messages\n".print_r($recordsByLevel[$level], true);
-                $this->assertEquals(0, $messages, $explain);
+                self::assertEquals(0, $messages, $explain);
             }
         }
     }
@@ -109,7 +178,7 @@ abstract class LogTestCase extends TestCase
             $msg .= implode("\n - ", $this->logger->messageList($level))."\n";
             $count += count($records);
         }
-        $this->assertEquals(0, $count, "Fail asserting that log is empty :\n$msg");
+        self::assertEquals(0, $count, "Fail asserting that log is empty :\n$msg");
     }
 
     /**
@@ -146,7 +215,11 @@ abstract class LogTestCase extends TestCase
             }
             print "LEVEL $level\n";
             foreach ($recordsByLevel[$level] as $record) {
-                printf($fmt, $record['message']);
+                $line = $record['message'];
+                $callback = fn(string $k, string $v): string => "$k=$v";
+                $ctxArray = array_map($callback, array_keys($record['context']), array_values($record['context']));
+                $contextStr = implode(', ', $ctxArray) ;
+                printf($fmt, $record['message']." - Context: $contextStr");
                 printf($fmt, "  => ".$this->logger->interpolate($record['message'], $record['context']));
                 $printed++;
             }
@@ -170,7 +243,10 @@ abstract class LogTestCase extends TestCase
             }
             print "LEVEL $level\n";
             foreach ($recordsByLevel[$level] as $record) {
-                printf($fmt, $record['message']);
+                $callback = fn(string $k, string $v): string => "$k=$v";
+                $ctxArray = array_map($callback, array_keys($record['context']), array_values($record['context']));
+                $contextStr = implode(', ', $ctxArray) ;
+                printf($fmt, $record['message']." - Context: $contextStr");
                 printf($fmt, "  => ".$this->logger->interpolate($record['message'], $record['context']));
                 $printed++;
             }

@@ -39,12 +39,15 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     /**
      * set authorized caller methods
      *
-     * @param array<string> $callers
+     * @param array<string>|string $callers
      *
      * @return void
      */
     public function setCallers($callers)
     {
+        if (is_string($callers)) {
+            $callers = [$callers];
+        }
         $this->callers = $callers;
     }
     /**
@@ -89,13 +92,15 @@ class TestLogger extends AbstractLogger implements LoggerInterface
     /**
      * searchAndDeleteInfoRecords, searchAndDeleteWarningRecords, ...
      *
-     * @param string $message
-     * @param string $level
-     * @param bool   $interpolate
+     * @param string               $message
+     * @param string               $level
+     * @param bool                 $interpolate
+     * @param bool                 $exact
+     * @param array<string,string> $withCtxt
      *
      * @return bool
      */
-    public function searchAndDeleteRecords($message, $level, $interpolate = false)
+    public function searchAndDeleteRecords($message, $level, $interpolate = false, $exact = false, $withCtxt = [])
     {
         $toDelete = [];
         $ret = false;
@@ -106,9 +111,34 @@ class TestLogger extends AbstractLogger implements LoggerInterface
                 if ($interpolate) {
                     $recMessage = $this->interpolate($rec['message'], $rec['context']);
                 }
-                if (strpos($recMessage, $message) !== false) {
-                    $ret = true;
-                    $toDelete[] = $i;
+                if ($exact) {
+                    $cond = $recMessage === $message;
+                } else {
+                    $cond = strpos($recMessage, $message) !== false;
+                }
+                if ($cond) {
+                    $foundAll = true;
+                    if (sizeof($withCtxt) > 0) {
+                        $ctx = $rec['context'];
+                        foreach ($withCtxt as $key => $value) {
+                            if (!array_key_exists($key, $ctx)) {
+                                $foundAll = false;
+                                //print "\nMissing key in context : $key\n";
+                                break;
+                            }
+                            if ($ctx[$key] !== $value) {
+                                $foundAll = false;
+                                $askedValue = str_replace("\n", " ", print_r($value, true));
+                                $ctxValue = str_replace("\n", " ", print_r($ctx[$key], true));
+                                //print "\nBad value in context for key $key, CTX=$ctxValue ASKED=$askedValue\n";
+                                break;
+                            }
+                        }
+                    }
+                    if ($foundAll) {
+                        $ret = true;
+                        $toDelete[] = $i;
+                    }
                 }
             }
         }
